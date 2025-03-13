@@ -1,0 +1,20 @@
+syntax = "proto3";
+
+package dev.lcian.bootwebfluxgrpc;
+
+option java_multiple_files = true;
+option java_package = "dev.lcian.bootwebfluxgrpc";
+option java_generate_equals_and_hash = true;
+
+message UploadRequest {
+  string deviceId = 1;
+  string fileName = 2;
+}
+
+message GetUploadUrlResponse {
+  string uploadUrl = 1;
+}
+
+service DeviceService {
+  rpc GetUploadUrl (UploadRequest) returns (GetUploadUrlResponse);
+} 
