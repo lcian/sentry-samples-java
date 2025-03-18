@@ -1,7 +1,8 @@
 plugins {
     kotlin("jvm") version "1.9.25"
     kotlin("plugin.spring") version "1.9.25"
-    id("org.springframework.boot") version "3.4.3"
+    id("org.springframework.boot") version "3.0.6"
+    //id("org.springframework.boot") version "3.4.3"
     id("io.spring.dependency-management") version "1.1.7"
     id("com.google.protobuf") version "0.9.4"
 }
@@ -19,14 +20,18 @@ repositories {
     mavenCentral()
 }
 
-extra["sentryVersion"] = "8.3.0"
+extra["sentryVersion"] = "6.17.0"
+//extra["sentryVersion"] = "8.3.0"
 
 dependencies {
     implementation("org.springframework.boot:spring-boot-starter-webflux")
+    implementation("org.springframework.boot:spring-boot-starter-tomcat")
+    
+    implementation("io.sentry:sentry-spring-boot-starter-jakarta")
+    //implementation("io.sentry:sentry-opentelemetry-agentless-spring")
+
     implementation("com.fasterxml.jackson.module:jackson-module-kotlin")
     implementation("io.projectreactor.kotlin:reactor-kotlin-extensions")
-    implementation("io.sentry:sentry-spring-boot-starter-jakarta")
-    implementation("io.sentry:sentry-opentelemetry-agentless-spring")
     implementation("org.jetbrains.kotlin:kotlin-reflect")
     implementation("org.jetbrains.kotlinx:kotlinx-coroutines-reactor")
     implementation("io.grpc:grpc-netty-shaded:1.62.2")
