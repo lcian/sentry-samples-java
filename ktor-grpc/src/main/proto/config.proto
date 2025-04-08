@@ -1,0 +1,51 @@
+// config.proto
+syntax = "proto3";
+
+package config;
+
+service GalaxyService {
+  rpc GetGalaxies(GetGalaxiesRequest) returns (GalaxiesResponse);
+}
+
+service NebulaService {
+  rpc GetNebula(CosmosRequest) returns (Nebula);
+}
+
+service QuasarService {
+  rpc GetQuasar(CosmosRequest) returns (Quasar);
+}
+
+service WormholeService {
+  rpc GetWormhole(CosmosRequest) returns (Wormhole);
+}
+
+message GetGalaxiesRequest {
+  string starsystem = 1;
+  string asteroid = 2;
+}
+
+message GalaxiesResponse {
+  repeated Galaxy results = 1;
+}
+
+message Galaxy {
+  string id = 1;
+  string name = 2;
+}
+
+message CosmosRequest {
+  string starsystem = 1;
+  string asteroid = 2;
+}
+
+message Nebula {
+  string dust = 1;
+}
+
+message Quasar {
+  string energySignature = 1;
+}
+
+message Wormhole {
+  string destination = 1;
+}
