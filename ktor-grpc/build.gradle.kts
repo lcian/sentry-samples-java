@@ -11,7 +11,10 @@ plugins {
 sourceSets {
     main {
         java {
-            srcDirs("build/generated/source/proto/main/grpc", "build/generated/source/proto/main/java")
+            srcDirs("build/generated/source/proto/main/grpc", 
+                   "build/generated/source/proto/main/java",
+                   "build/generated/source/proto/main/grpckt",   // Add Kotlin gRPC directory
+                   "build/generated/source/proto/main/kotlin")   // Add Kotlin protobuf directory
         }
     }
 }
@@ -32,17 +35,19 @@ repositories {
 }
 
 dependencies {
-    implementation("org.jetbrains.kotlinx:kotlinx-coroutines-core:1.10.2")
+    implementation("org.jetbrains.kotlinx:kotlinx-coroutines-core-jvm:1.9.0")
     implementation("javax.annotation:javax.annotation-api:1.3.2")
 
-    implementation("io.ktor:ktor-serialization-kotlinx-json:2.3.7")
-    implementation("io.ktor:ktor-server-content-negotiation:2.3.7")
-    implementation("io.ktor:ktor-server-status-pages:2.3.7")
+    implementation("io.ktor:ktor-serialization-kotlinx-json:2.3.13")
+    implementation("io.ktor:ktor-server-content-negotiation:2.3.13")
+    implementation("io.ktor:ktor-server-status-pages:2.3.13")
 
-    implementation("io.grpc:grpc-netty-shaded:1.63.0")
-    implementation("io.grpc:grpc-protobuf:1.63.0")
-    implementation("io.grpc:grpc-stub:1.63.0")
-    implementation("com.google.protobuf:protobuf-java-util:3.25.1")
+    implementation("io.grpc:grpc-netty-shaded:1.67.1")
+    implementation("io.grpc:grpc-protobuf:1.67.1")
+    implementation("io.grpc:grpc-stub:1.67.1")
+    implementation("io.grpc:grpc-kotlin-stub:1.4.1")
+    implementation("com.google.protobuf:protobuf-java-util:3.25.6")
+    implementation("com.google.protobuf:protobuf-kotlin:3.25.1") // Add Kotlin protobuf support
 
     implementation(libs.ktor.server.core)
     implementation(libs.ktor.server.netty)
@@ -61,11 +66,21 @@ protobuf {
         id("grpc") {
             artifact = "io.grpc:protoc-gen-grpc-java:1.63.0"
         }
+        // Add Kotlin gRPC plugin
+        id("grpckt") {
+            artifact = "io.grpc:protoc-gen-grpc-kotlin:1.4.1:jdk8@jar"
+        }
     }
     generateProtoTasks {
         all().forEach {
             it.plugins {
                 id("grpc")
+                // Add Kotlin gRPC plugin to tasks
+                id("grpckt")
+            }
+            // Add Kotlin protobuf generation
+            it.builtins {
+                id("kotlin")
             }
         }
     }

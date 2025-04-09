@@ -17,6 +17,11 @@ import config.Config.Nebula
 import config.Config.Quasar
 import config.Config.Wormhole
 import kotlin.random.Random
+// Add Kotlin gRPC imports
+import config.GalaxyServiceGrpcKt
+import config.NebulaServiceGrpcKt
+import config.QuasarServiceGrpcKt
+import config.WormholeServiceGrpcKt
 
 // Base gRPC server class
 abstract class BaseGrpcServer(private val port: Int) {
@@ -62,83 +67,55 @@ class WormholeGrpcServer : BaseGrpcServer(9094) {
     override fun createService(): BindableService = WormholeServiceImpl()
 }
 
-class GalaxyServiceImpl : GalaxyServiceGrpc.GalaxyServiceImplBase() {
-    override fun getGalaxies(
-        request: GetGalaxiesRequest,
-        responseObserver: StreamObserver<GalaxiesResponse>
-    ) {
-        runBlocking {
-            // Simulate network delay
-            delay(Random.nextLong(0, 100))
+// Using Kotlin gRPC service implementation
+class GalaxyServiceImpl : GalaxyServiceGrpcKt.GalaxyServiceCoroutineImplBase() {
+    override suspend fun getGalaxies(request: GetGalaxiesRequest): GalaxiesResponse {
+        // Simulate network delay
+        delay(Random.nextLong(0, 100))
+        
+        val galaxy = Galaxy.newBuilder()
+            .setId(request.getStarsystem())
+            .setName(request.getAsteroid())
+            .build()
             
-            val galaxy = Galaxy.newBuilder()
-                .setId(request.getStarsystem())
-                .setName(request.getAsteroid())
-                .build()
-                
-            val response = GalaxiesResponse.newBuilder()
-                .addResults(galaxy)
-                .build()
-                
-            responseObserver.onNext(response)
-            responseObserver.onCompleted()
-        }
+        return GalaxiesResponse.newBuilder()
+            .addResults(galaxy)
+            .build()
     }
 }
 
-class NebulaServiceImpl : NebulaServiceGrpc.NebulaServiceImplBase() {
-    override fun getNebula(
-        request: CosmosRequest,
-        responseObserver: StreamObserver<Nebula>
-    ) {
-        runBlocking {
-            // Simulate network delay
-            delay(Random.nextLong(0, 100))
-            
-            val response = Nebula.newBuilder()
-                .setDust(request.getAsteroid())
-                .build()
-                
-            responseObserver.onNext(response)
-            responseObserver.onCompleted()
-        }
+// Using Kotlin gRPC service implementation
+class NebulaServiceImpl : NebulaServiceGrpcKt.NebulaServiceCoroutineImplBase() {
+    override suspend fun getNebula(request: CosmosRequest): Nebula {
+        // Simulate network delay
+        delay(Random.nextLong(0, 100))
+        
+        return Nebula.newBuilder()
+            .setDust(request.getAsteroid())
+            .build()
     }
 }
 
-class QuasarServiceImpl : QuasarServiceGrpc.QuasarServiceImplBase() {
-    override fun getQuasar(
-        request: CosmosRequest,
-        responseObserver: StreamObserver<Quasar>
-    ) {
-        runBlocking {
-            // Simulate network delay
-            delay(Random.nextLong(0, 100))
-            
-            val response = Quasar.newBuilder()
-                .setEnergySignature(request.getAsteroid())
-                .build()
-                
-            responseObserver.onNext(response)
-            responseObserver.onCompleted()
-        }
+// Using Kotlin gRPC service implementation
+class QuasarServiceImpl : QuasarServiceGrpcKt.QuasarServiceCoroutineImplBase() {
+    override suspend fun getQuasar(request: CosmosRequest): Quasar {
+        // Simulate network delay
+        delay(Random.nextLong(0, 100))
+        
+        return Quasar.newBuilder()
+            .setEnergySignature(request.getAsteroid())
+            .build()
     }
 }
 
-class WormholeServiceImpl : WormholeServiceGrpc.WormholeServiceImplBase() {
-    override fun getWormhole(
-        request: CosmosRequest,
-        responseObserver: StreamObserver<Wormhole>
-    ) {
-        runBlocking {
-            // Simulate network delay
-            delay(Random.nextLong(0, 100))
-            
-            val response = Wormhole.newBuilder()
-                .setDestination(request.getAsteroid())
-                .build()
-                
-            responseObserver.onNext(response)
-            responseObserver.onCompleted()
-        }
+// Using Kotlin gRPC service implementation
+class WormholeServiceImpl : WormholeServiceGrpcKt.WormholeServiceCoroutineImplBase() {
+    override suspend fun getWormhole(request: CosmosRequest): Wormhole {
+        // Simulate network delay
+        delay(Random.nextLong(0, 100))
+        
+        return Wormhole.newBuilder()
+            .setDestination(request.getAsteroid())
+            .build()
     }
 } 

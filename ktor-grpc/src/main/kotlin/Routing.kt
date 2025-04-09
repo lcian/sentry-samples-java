@@ -27,8 +27,62 @@ import io.ktor.http.*
 import io.ktor.server.plugins.statuspages.*
 import io.grpc.StatusRuntimeException
 import org.slf4j.LoggerFactory
+import io.grpc.ClientInterceptor
+import io.grpc.CallOptions
+import io.grpc.Channel
+import io.grpc.ClientCall
+import io.grpc.MethodDescriptor
+import io.grpc.ForwardingClientCall
+import io.grpc.Metadata
+import io.grpc.ForwardingClientCallListener
+// Add Kotlin gRPC stub imports
+import config.GalaxyServiceGrpcKt
+import config.NebulaServiceGrpcKt
+import config.QuasarServiceGrpcKt
+import config.WormholeServiceGrpcKt
 
 private val logger = LoggerFactory.getLogger("dev.lcian.Routing")
+
+// Define a gRPC interceptor to log request details
+class LoggingInterceptor : ClientInterceptor {
+    override fun <ReqT, RespT> interceptCall(
+        method: MethodDescriptor<ReqT, RespT>,
+        callOptions: CallOptions,
+        next: Channel
+    ): ClientCall<ReqT, RespT> {
+        val startTime = System.currentTimeMillis()
+        val methodName = method.fullMethodName
+        logger.info("gRPC Request started: $methodName")
+        
+        return object : ForwardingClientCall.SimpleForwardingClientCall<ReqT, RespT>(next.newCall(method, callOptions)) {
+            override fun sendMessage(message: ReqT) {
+                logger.info("gRPC Request payload for $methodName: $message")
+                super.sendMessage(message)
+            }
+
+            override fun start(responseListener: Listener<RespT>, headers: Metadata) {
+                val listener = object : ForwardingClientCallListener.SimpleForwardingClientCallListener<RespT>(responseListener) {
+                    override fun onMessage(message: RespT) {
+                        val duration = System.currentTimeMillis() - startTime
+                        logger.info("gRPC Response received for $methodName after ${duration}ms: $message")
+                        super.onMessage(message)
+                    }
+
+                    override fun onClose(status: io.grpc.Status, trailers: Metadata) {
+                        val duration = System.currentTimeMillis() - startTime
+                        if (status.isOk) {
+                            logger.info("gRPC Call $methodName completed successfully in ${duration}ms")
+                        } else {
+                            logger.error("gRPC Call $methodName failed in ${duration}ms: ${status.code} - ${status.description}")
+                        }
+                        super.onClose(status, trailers)
+                    }
+                }
+                super.start(listener, headers)
+            }
+        }
+    }
+}
 
 fun Application.configureRouting() {
     // Install StatusPages to handle exceptions
@@ -49,28 +103,35 @@ fun Application.configureRouting() {
         }
     }
     
+    // Create a logging interceptor to track gRPC requests
+    val loggingInterceptor = LoggingInterceptor()
+    
     // Create the gRPC channels for each service
     val galaxyChannel = ManagedChannelBuilder.forAddress("localhost", 9091)
         .usePlaintext()
+        .intercept(loggingInterceptor)
         .build()
     
     val nebulaChannel = ManagedChannelBuilder.forAddress("localhost", 9092)
         .usePlaintext()
+        .intercept(loggingInterceptor)
         .build()
     
     val quasarChannel = ManagedChannelBuilder.forAddress("localhost", 9093)
         .usePlaintext()
+        .intercept(loggingInterceptor)
         .build()
     
     val wormholeChannel = ManagedChannelBuilder.forAddress("localhost", 9094)
         .usePlaintext()
+        .intercept(loggingInterceptor)
         .build()
 
-    // Initialize the stubs
-    val galaxyStub = GalaxyServiceGrpc.newStub(galaxyChannel)
-    val nebulaStub = NebulaServiceGrpc.newStub(nebulaChannel)
-    val quasarStub = QuasarServiceGrpc.newStub(quasarChannel)
-    val wormholeStub = WormholeServiceGrpc.newStub(wormholeChannel)
+    // Initialize the Kotlin stubs
+    val galaxyStub = GalaxyServiceGrpcKt.GalaxyServiceCoroutineStub(galaxyChannel)
+    val nebulaStub = NebulaServiceGrpcKt.NebulaServiceCoroutineStub(nebulaChannel)
+    val quasarStub = QuasarServiceGrpcKt.QuasarServiceCoroutineStub(quasarChannel)
+    val wormholeStub = WormholeServiceGrpcKt.WormholeServiceCoroutineStub(wormholeChannel)
 
     routing {
         get("/") {
@@ -89,13 +150,17 @@ fun Application.configureRouting() {
 
 suspend fun getConfig(
     call: ApplicationCall,
-    galaxyStub: GalaxyServiceGrpc.GalaxyServiceStub,
-    nebulaStub: NebulaServiceGrpc.NebulaServiceStub,
-    quasarStub: QuasarServiceGrpc.QuasarServiceStub,
-    wormholeStub: WormholeServiceGrpc.WormholeServiceStub
+    galaxyStub: GalaxyServiceGrpcKt.GalaxyServiceCoroutineStub,
+    nebulaStub: NebulaServiceGrpcKt.NebulaServiceCoroutineStub,
+    quasarStub: QuasarServiceGrpcKt.QuasarServiceCoroutineStub,
+    wormholeStub: WormholeServiceGrpcKt.WormholeServiceCoroutineStub
 ) = withContext(Dispatchers.IO) {
     val starsystem = call.request.queryParameters["starsystem"] ?: "default-starsystem"
     val asteroid = call.request.queryParameters["asteroid"] ?: "default-asteroid"
+    
+    // Log HTTP request details
+    logger.info("Request parameters: starsystem=$starsystem, asteroid=$asteroid")
+    logger.info("Request headers: ${call.request.headers.entries().joinToString(", ") { "${it.key}=${it.value}" }}")
 
     try {
         val galaxyA = async {
@@ -104,7 +169,8 @@ suspend fun getConfig(
                     .setStarsystem(starsystem)
                     .setAsteroid(asteroid)
                     .build()
-                val response = galaxyStub.getGalaxiesAsync(request)
+                // Use Kotlin coroutine stub
+                val response = galaxyStub.getGalaxies(request)
                 GalaxyDto(
                     id = response.getResults(0).getId(),
                     name = response.getResults(0).getName()
@@ -121,7 +187,8 @@ suspend fun getConfig(
                     .setStarsystem(starsystem)
                     .setAsteroid(asteroid)
                     .build()
-                val response = nebulaStub.getNebulaAsync(request)
+                // Use Kotlin coroutine stub
+                val response = nebulaStub.getNebula(request)
                 NebulaDto(dust = response.getDust())
             } catch (e: Exception) {
                 logger.error("Error getting nebula data", e)
@@ -135,7 +202,8 @@ suspend fun getConfig(
                     .setStarsystem(starsystem)
                     .setAsteroid(asteroid)
                     .build()
-                val response = quasarStub.getQuasarAsync(request)
+                // Use Kotlin coroutine stub
+                val response = quasarStub.getQuasar(request)
                 QuasarDto(energySignature = response.getEnergySignature())
             } catch (e: Exception) {
                 logger.error("Error getting quasar data", e)
@@ -149,7 +217,8 @@ suspend fun getConfig(
                     .setStarsystem(starsystem)
                     .setAsteroid(asteroid)
                     .build()
-                val response = wormholeStub.getWormholeAsync(request)
+                // Use Kotlin coroutine stub
+                val response = wormholeStub.getWormhole(request)
                 WormholeDto(destination = response.getDestination())
             } catch (e: Exception) {
                 logger.error("Error getting wormhole data", e)
@@ -171,74 +240,7 @@ suspend fun getConfig(
     }
 }
 
-// Extension functions to convert gRPC async callbacks to coroutines
-suspend fun GalaxyServiceGrpc.GalaxyServiceStub.getGalaxiesAsync(request: GetGalaxiesRequest): GalaxiesResponse = 
-    suspendCoroutine { continuation ->
-        getGalaxies(request, object : StreamObserver<GalaxiesResponse> {
-            override fun onNext(response: GalaxiesResponse) {
-                continuation.resume(response)
-            }
-            
-            override fun onError(t: Throwable) {
-                continuation.resumeWithException(t)
-            }
-            
-            override fun onCompleted() {
-                // Nothing to do here
-            }
-        })
-    }
-
-suspend fun NebulaServiceGrpc.NebulaServiceStub.getNebulaAsync(request: CosmosRequest): Nebula = 
-    suspendCoroutine { continuation ->
-        getNebula(request, object : StreamObserver<Nebula> {
-            override fun onNext(response: Nebula) {
-                continuation.resume(response)
-            }
-            
-            override fun onError(t: Throwable) {
-                continuation.resumeWithException(t)
-            }
-            
-            override fun onCompleted() {
-                // Nothing to do here
-            }
-        })
-    }
-
-suspend fun QuasarServiceGrpc.QuasarServiceStub.getQuasarAsync(request: CosmosRequest): Quasar = 
-    suspendCoroutine { continuation ->
-        getQuasar(request, object : StreamObserver<Quasar> {
-            override fun onNext(response: Quasar) {
-                continuation.resume(response)
-            }
-            
-            override fun onError(t: Throwable) {
-                continuation.resumeWithException(t)
-            }
-            
-            override fun onCompleted() {
-                // Nothing to do here
-            }
-        })
-    }
-
-suspend fun WormholeServiceGrpc.WormholeServiceStub.getWormholeAsync(request: CosmosRequest): Wormhole = 
-    suspendCoroutine { continuation ->
-        getWormhole(request, object : StreamObserver<Wormhole> {
-            override fun onNext(response: Wormhole) {
-                continuation.resume(response)
-            }
-            
-            override fun onError(t: Throwable) {
-                continuation.resumeWithException(t)
-            }
-            
-            override fun onCompleted() {
-                // Nothing to do here
-            }
-        })
-    }
+// Remove the Java-style extension functions since we're now using the Kotlin stubs directly
 
 @Serializable
 data class GalaxyDto(val id: String, val name: String)
