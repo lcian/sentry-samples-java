@@ -1,0 +1,22 @@
+syntax = "proto3";
+
+option java_multiple_files = true;
+option java_package = "com.example.echo";
+option java_outer_classname = "EchoProto";
+
+// The echo service definition.
+service EchoService {
+    // Sends an echo response for a request
+    rpc Echo (EchoRequest) returns (EchoResponse) {}
+}
+
+// The request message containing a message.
+message EchoRequest {
+    string message = 1;
+}
+
+// The response message echoing back the message
+message EchoResponse {
+    string message = 1;
+    int64 timestamp = 2;
+} 
