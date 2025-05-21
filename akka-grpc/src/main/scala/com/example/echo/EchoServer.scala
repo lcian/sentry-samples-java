@@ -1,10 +1,10 @@
 package com.example.echo
 
-import akka.actor.typed.ActorSystem
-import akka.actor.typed.scaladsl.Behaviors
-import akka.http.scaladsl.Http
-import akka.http.scaladsl.model.{HttpRequest, HttpResponse}
-import akka.http.scaladsl.settings.ServerSettings
+import org.apache.pekko.actor.typed.ActorSystem
+import org.apache.pekko.actor.typed.scaladsl.Behaviors
+import org.apache.pekko.http.scaladsl.Http
+import org.apache.pekko.http.scaladsl.model.{HttpRequest, HttpResponse}
+import org.apache.pekko.http.scaladsl.settings.ServerSettings
 import com.typesafe.config.ConfigFactory
 import io.sentry.Sentry
 import org.slf4j.LoggerFactory
@@ -12,7 +12,7 @@ import org.slf4j.LoggerFactory
 import scala.concurrent.{ExecutionContext, Future}
 import scala.concurrent.duration._
 import scala.util.{Failure, Success}
-import akka.http.scaladsl.Http.ServerBinding
+import org.apache.pekko.http.scaladsl.Http.ServerBinding
 
 object EchoServer {
   private val logger = LoggerFactory.getLogger(getClass)

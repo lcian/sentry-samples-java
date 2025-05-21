@@ -1,4 +1,4 @@
-resolvers += "Akka library repository".at("https://repo.akka.io/maven")
+resolvers += Resolver.mavenCentral
 
-addSbtPlugin("com.lightbend.akka.grpc" % "sbt-akka-grpc" % "2.5.5")
+addSbtPlugin("org.apache.pekko" % "pekko-grpc-sbt-plugin" % "1.1.1")
 addSbtPlugin("com.lightbend.sbt" % "sbt-javaagent" % "0.1.6")

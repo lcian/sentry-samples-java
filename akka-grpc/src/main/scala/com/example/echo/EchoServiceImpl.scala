@@ -1,6 +1,6 @@
 package com.example.echo
 
-import akka.actor.typed.ActorSystem
+import org.apache.pekko.actor.typed.ActorSystem
 import io.grpc.Status
 import io.opentelemetry.api.GlobalOpenTelemetry
 import io.opentelemetry.api.trace.{Span, SpanKind}
@@ -12,8 +12,8 @@ import org.slf4j.LoggerFactory
 import scala.concurrent.{ExecutionContext, Future}
 import scala.jdk.CollectionConverters._
 import scala.util.control.NonFatal
-import akka.grpc.{GrpcServiceException => AkkaGrpcServiceException}
-import akka.grpc.scaladsl.Metadata
+import org.apache.pekko.grpc.{GrpcServiceException => PekkoGrpcServiceException}
+import org.apache.pekko.grpc.scaladsl.Metadata
 
 // Custom exception to use in our example
 class GrpcServiceException(val status: Status) extends RuntimeException(status.getDescription)
@@ -69,7 +69,7 @@ class EchoServiceImpl(system: ActorSystem[_]) extends EchoServicePowerApi {
         }
 
         if (message.contains("4"))
-          throw new AkkaGrpcServiceException(status =
+          throw new PekkoGrpcServiceException(status =
             Status.RESOURCE_EXHAUSTED.withDescription(s"Sentry test error. $message=$message;in.message=${in.message}"))
 
         EchoResponse(message, System.currentTimeMillis())

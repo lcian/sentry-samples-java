@@ -1,12 +1,12 @@
 package com.example.echo
 
 import io.opentelemetry.api.trace.{Span, SpanKind, StatusCode, Tracer}
-import akka.actor.typed.ActorSystem
-import akka.actor.typed.scaladsl.Behaviors
-import akka.grpc.GrpcClientSettings
-import akka.http.scaladsl.model.HttpEntity
-import akka.http.scaladsl.model.headers.RawHeader
-import akka.stream.scaladsl.Source
+import org.apache.pekko.actor.typed.ActorSystem
+import org.apache.pekko.actor.typed.scaladsl.Behaviors
+import org.apache.pekko.grpc.GrpcClientSettings
+import org.apache.pekko.http.scaladsl.model.HttpEntity
+import org.apache.pekko.http.scaladsl.model.headers.RawHeader
+import org.apache.pekko.stream.scaladsl.Source
 import io.opentelemetry.api.GlobalOpenTelemetry
 import io.opentelemetry.api.trace.propagation.W3CTraceContextPropagator
 import io.opentelemetry.context.Context

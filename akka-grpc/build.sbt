@@ -1,17 +1,17 @@
-name := "akka-grpc-quickstart-scala"
+name := "pekko-grpc-quickstart-scala"
 
 version := "1.0"
 scalaVersion := "2.13.15"
 
-val akkaVersion = "2.10.5"
-lazy val akkaGrpcVersion = sys.props.getOrElse("akka-grpc.version", "2.5.5")
+val pekkoVersion = "1.1.2"
+lazy val pekkoGrpcVersion = sys.props.getOrElse("pekko-grpc.version", "1.1.1")
 val openTelemetryVersion = "1.40.0"
 
-enablePlugins(AkkaGrpcPlugin)
+enablePlugins(PekkoGrpcPlugin)
 enablePlugins(JavaAgent)
 
 // Enable Power API generation for accessing metadata
-akkaGrpcCodeGeneratorSettings += "server_power_apis"
+pekkoGrpcCodeGeneratorSettings += "server_power_apis"
 
 // Run in a separate JVM, to make sure sbt waits until all threads have
 // finished before returning.
@@ -19,16 +19,17 @@ akkaGrpcCodeGeneratorSettings += "server_power_apis"
 // sbt tasks, consider https://github.com/spray/sbt-revolver/
 fork := true
 
-resolvers += "Akka library repository".at("https://repo.akka.io/maven")
+resolvers += Resolver.mavenCentral
 
 libraryDependencies ++= Seq(
-  "com.typesafe.akka" %% "akka-actor-typed" % akkaVersion,
-  "com.typesafe.akka" %% "akka-stream" % akkaVersion,
-  "com.typesafe.akka" %% "akka-discovery" % akkaVersion,
-  "com.typesafe.akka" %% "akka-pki" % akkaVersion,
+  "org.apache.pekko" %% "pekko-actor-typed" % pekkoVersion,
+  "org.apache.pekko" %% "pekko-stream" % pekkoVersion,
+  "org.apache.pekko" %% "pekko-discovery" % pekkoVersion,
+  "org.apache.pekko" %% "pekko-pki" % pekkoVersion,
+  "org.apache.pekko" %% "pekko-slf4j" % pekkoVersion,
   "ch.qos.logback" % "logback-classic" % "1.5.18",
-  "com.typesafe.akka" %% "akka-actor-testkit-typed" % akkaVersion % Test,
-  "com.typesafe.akka" %% "akka-stream-testkit" % akkaVersion % Test,
+  "org.apache.pekko" %% "pekko-actor-testkit-typed" % pekkoVersion % Test,
+  "org.apache.pekko" %% "pekko-stream-testkit" % pekkoVersion % Test,
   
   // OpenTelemetry dependencies
   "io.opentelemetry" % "opentelemetry-api" % openTelemetryVersion,
